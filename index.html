@@ -1,0 +1,777 @@
+<!DOCTYPE html>
+
+<html>
+	<head>
+		<link rel="stylesheet" href="css/modal.css">
+		<link rel="stylesheet" href="css/sidebar.css">
+		<link href="//maxcdn.bootstrapcdn.com/font-awesome/4.1.0/css/font-awesome.min.css" rel="stylesheet">
+		<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@simonwep/pickr/dist/themes/classic.min.css"/>
+		<link rel="stylesheet" href="./css/fontawesome-iconpicker.min.css">
+		<link rel="stylesheet" href="css/app.css">
+		<link rel="stylesheet" href="css/switch.css">
+        <style>
+		img.previewimage {
+    max-width:100%;
+    height:auto !important;
+    border:1px #ccc solid;
+}
+.switch-button-control {margin-bottom:-30px;}
+		</style>
+	</head>
+
+	<body>
+		<div id="app" style="display: none;" :class="load" >
+			<custom-dashboard 
+				ref="shortcut" 
+				v-on:toggle-sidebar="closeSidebar()" 
+				:config="locationConfig"
+				:sidebar="sidebar" 
+				@dashboard-shortcut="generateShortcut" 
+				v-on:click.stop=""></custom-dashboard>
+
+			<custom-check-in 
+				@custom-checkin="generateCheckIn" 
+				:config="locationConfig"
+				@close="updateLocationConfig"
+				ref="checkInElem"
+
+			></custom-check-in>
+			<div  id="main" :class="[ sidebar ? 'sidebar-open-body' : 'sidebar-close-body' ]" @click="closeSidebar()">
+				
+				<div class="tools">
+					
+					
+					<button style="margin-left: -4px" class="primary-button" @click=" toggleOption('all-location', 'sidebar') " v-on:click.stop="" ><span class="fas fa-cogs"></span>&nbsp;&nbsp; Custom Buttons</button>
+					<button style="margin-left: -4px" class="primary-button" @click=" toggleOption('all-location', 'dashboard-customizer') " ><span class="fas fa-wrench"></span>&nbsp;&nbsp;Dashboard Customizer</button>
+					<button style="margin-left: -4px" class="primary-button" @click=" toggleOption('all-location', 'check-in') "><span class="fas fa-code" ></span> &nbsp;Check In Button</button>
+					<button style="margin-left: -4px" class="primary-button" @click=" toggleOption('all-location', 'user-settings') "><span class="fas fa-group" ></span> &nbsp;&nbsp; User Settings</button>
+					<button class="primary-button generate-code" style="float: right;" data-micromodal-trigger="generateCode" @click="generateCode()"><span class="fas fa-code" ></span>&nbsp;&nbsp;Generate Code</button>
+					<button class="primary-button" style="float: right;" @click="openImportModal()" ><span class="fas fa-upload"></span>&nbsp;&nbsp;Import Code</button>
+				
+				</div>
+				
+				<div style="padding: 0 20px;">
+					<div style="width: 14rem;
+					color: rgb(121, 121, 121);
+					position: relative;
+					top: -11px;">
+						<switch-button v-model="locationLogo" color="#64bd63"></switch-button> <span style="font-size: 10pt;">Enable Location-Based Logo</span>
+					</div>
+					<div 
+						v-for="location in repo" 
+						:key="location.id" 
+						@mouseleave="location.isTab=false"
+						class="location" >
+
+						<svg 
+							v-if="location.id!='all-location' && location.id!='agency-dashboard'"
+							@mouseover="location.isTab=true" 
+							class="location-menu svg-inline--fa fa-ellipsis-v fa-w-6" 
+							aria-hidden="true" 
+							focusable="false" 
+							data-prefix="fas" 
+							data-icon="ellipsis-v" 
+							role="img" 
+							xmlns="http://www.w3.org/2000/svg" 
+							viewBox="0 0 192 512">
+								<path fill="currentColor" d="M96 184c39.8 0 72 32.2 72 72s-32.2 72-72 72-72-32.2-72-72 32.2-72 72-72zM24 80c0 39.8 32.2 72 72 72s72-32.2 72-72S135.8 8 96 8 24 40.2 24 80zm0 352c0 39.8 32.2 72 72 72s72-32.2 72-72-32.2-72-72-72-72 32.2-72 72z"></path>
+						</svg>
+						<div>
+							<div @click="accountSelection(location, 'admin')" v-bind:id="location.id+'-admin-settings'" class="settings-account settings-account-selected">Admin</div>
+							<div @click="accountSelection(location, 'user')" v-bind:id="location.id+'-user-settings'" style="right: 5px;" class="settings-account">Users</div>
+						</div>
+						<div 
+							v-if="location.id!='all-location'  && location.isTab==true" 
+							@mouseleave="location.isTab=false"
+							class="addons">
+							<span class="fas fa-cogs" 	@click="location.isTab=false; toggleOption(location.id, 'sidebar');" v-on:click.stop=""></span>
+							<!-- <span class="fas fa-wrench" @click="location.isTab=false; toggleOption(location.id, 'dashboard-customizer');"></span> -->
+							<span class="fas fa-code" 	@click="location.isTab=false; toggleOption(location.id, 'check-in');"></span>
+							<span class="fas fa-group"  @click="location.isTab=false; toggleOption(location.id, 'user-settings');"></span>
+						</div>
+						
+						<div class='header'>{{ location.name }}</div>
+						<div class="subheader">#{{ location.id }}</div>
+	
+						<div v-if="location.menus.length==0" class="no-menus">
+							<span class="fas fa-layer-group"></span><br>
+							<div class="no-menus-content">You haven't add any menus yet</div>
+						</div>
+						<div v-else-if="location.menus.length>0" class="menus" :id="location.id">
+							<draggable :move="onMove" v-bind="dragOptions"  v-model="location.menus" @start="drag=true" @end="drag=false">
+									<div v-for="menu in location.menus"  >
+										
+										<div v-if="menu.accountType=='admin'  && location.accountSelected == 'admin'">
+											<div v-if="menu.type=='single'" class="menu-option" @click.self="updateMenu(location, menu)">
+												<span v-if="menu.isIconPath!=true" :class="menu.icon">&nbsp;&nbsp;</span>
+												<img v-if="menu.isIconPath==true" :src="menu.iconPath" class="menu-image">
+												{{ menu.name }}
+												
+												<span style="float: right;" @click="deleteMenu(menu.id, location.id)"><i class="fas fa-trash" aria-hidden="true"></i></span>
+												<span v-if="menu.location=='top'" style="float: right; margin-right: 5pt;" ><i class="fas fa-arrow-up" aria-hidden="true"></i></span>
+												<span v-else-if="menu.location=='bottom'" style="float: right; margin-right: 5pt;" ><i class="fas fa-arrow-down" aria-hidden="true"></i></span>
+												<span v-else style="float: right; margin-right: 5pt;" ><i class="fas fa-arrows-alt" aria-hidden="true"></i></span>
+											</div>
+	
+											<div v-if="menu.type=='multi'" class="multi-menu">
+	
+												<div  class="menu-option" @click.self="updateMenu(location, menu)">
+													<span v-if="menu.isIconPath!=true" :class="menu.icon">&nbsp;&nbsp;</span>
+													<img v-if="menu.isIconPath==true" :src="menu.iconPath" class="menu-image">
+													{{ menu.name }}
+													
+													<span style="float: right;" @click="deleteMenu(menu.id, location.id)"><i class="fas fa-trash" aria-hidden="true"></i></span>
+													<span v-if="menu.location=='top'" style="float: right; margin-right: 5pt;" ><i class="fas fa-arrow-up" aria-hidden="true"></i></span>
+													<span v-else-if="menu.location=='bottom'" style="float: right; margin-right: 5pt;" ><i class="fas fa-arrow-down" aria-hidden="true"></i></span>
+													<span v-else style="float: right; margin-right: 5pt;" ><i class="fas fa-arrows-alt" aria-hidden="true"></i></span>
+												</div>
+	
+												<draggable group="menu.child" @start="drag=true" @end="drag=false">
+													
+													<div v-for="child in menu.child">
+														<div class="multi-menu-child" @click.self="updateChild(location, menu, child)">
+															{{ child.name }}
+															
+															<span style="float: right;"><i  @click="deleteMenuChild(menu.id, child.name, location.id)"	 class="fas fa-trash" aria-hidden="true"></i></span>
+														</div>
+													</div>
+	
+												</draggable>
+	
+	
+												<div class='add-child' @click="updateChildActiveLocation(location.id, location.name, 'child', menu.name)"><i class="fas fa-plus-circle"></i> Add Child</div>
+											</div>
+										</div>
+
+										<div v-if="menu.accountType=='user' && location.accountSelected == 'user'">
+											<div v-if="menu.type=='single'" class="menu-option" @click.self="updateMenu(location, menu)">
+												<span v-if="menu.isIconPath!=true" :class="menu.icon">&nbsp;&nbsp;</span>
+												<img v-if="menu.isIconPath==true" :src="menu.iconPath" class="menu-image">
+												{{ menu.name }}
+												
+												<span style="float: right;" @click="deleteMenu(menu.id, location.id)"><i class="fas fa-trash" aria-hidden="true"></i></span>
+												<span v-if="menu.location=='top'" style="float: right; margin-right: 5pt;" ><i class="fas fa-arrow-up" aria-hidden="true"></i></span>
+												<span v-else-if="menu.location=='bottom'" style="float: right; margin-right: 5pt;" ><i class="fas fa-arrow-down" aria-hidden="true"></i></span>
+												<span v-else style="float: right; margin-right: 5pt;" ><i class="fas fa-arrows-alt" aria-hidden="true"></i></span>
+											</div>
+	
+											<div v-if="menu.type=='multi'" class="multi-menu">
+	
+												<div  class="menu-option" @click.self="updateMenu(location, menu)">
+													<span v-if="menu.isIconPath!=true" :class="menu.icon">&nbsp;&nbsp;</span>
+													<img v-if="menu.isIconPath==true" :src="menu.iconPath" class="menu-image">
+													{{ menu.name }}
+													
+													<span style="float: right;" @click="deleteMenu(menu.id, location.id)"><i class="fas fa-trash" aria-hidden="true"></i></span>
+													<span v-if="menu.location=='top'" style="float: right; margin-right: 5pt;" ><i class="fas fa-arrow-up" aria-hidden="true"></i></span>
+													<span v-else-if="menu.location=='bottom'" style="float: right; margin-right: 5pt;" ><i class="fas fa-arrow-down" aria-hidden="true"></i></span>
+													<span v-else style="float: right; margin-right: 5pt;" ><i class="fas fa-arrows-alt" aria-hidden="true"></i></span>
+												</div>
+	
+												<draggable group="menu.child" @start="drag=true" @end="drag=false">
+													
+													<div v-for="child in menu.child">
+														<div class="multi-menu-child" @click.self="updateChild(location, menu, child)">
+															{{ child.name }}
+															
+															<span style="float: right;"><i  @click="deleteMenuChild(menu.id, child.name, location.id)"	 class="fas fa-trash" aria-hidden="true"></i></span>
+														</div>
+													</div>
+	
+												</draggable>
+	
+	
+												<div class='add-child' @click="updateChildActiveLocation(location.id, location.name, 'child', menu.name)"><i class="fas fa-plus-circle"></i> Add Child</div>
+											</div>
+										</div>
+
+									</div>
+
+									
+							</draggable>
+						</div>
+	
+						<button data-micromodal-trigger="menuId" @click="updateActiveLocation(location.id, location.name, 'menu', null, location.accountSelected)">Add Menu</button>
+						<span v-if="location.id!='all-location' && location.id != 'agency-dashboard'" style="float: right;"  class="delete-location" @click="deleteLocation(location.id)"><i class="fas fa-trash" aria-hidden="true"></i></span>
+						
+					</div>
+
+
+
+	
+					<div class="add-location" @click="openLocationModal()"><span class="fas fa-plus" ></span> &nbsp;&nbsp;Add New Location</div>
+					
+				</div>
+			</div>
+
+
+			
+
+
+			<div class="modal micromodal-slide" id="lastSaved" aria-hidden="true">
+				<div class="modal__overlay" tabindex="-1" data-micromodal-close>
+					<div class="modal__container" role="dialog" aria-modal="true" aria-labelledby="locationId-title">
+					<header class="modal__header">
+						<h2 class="modal__title" id="locationId-title"><span class="fas fa-plus" ></span>&nbsp;&nbsp;Do you want to load last saved?</h2>
+						<button class="modal__close" aria-label="Close modal" data-micromodal-close></button>
+					</header>
+					<footer class="modal__footer">
+						<br><br>
+						<button class="modal__btn modal__btn-primary" @click="loadSavedConfig">Yes</button>
+						<button class="modal__btn" data-micromodal-close aria-label="Close this dialog window">Close</button>
+					</footer>
+					</div>
+				</div>
+			</div>
+
+
+
+
+			<div class="modal micromodal-slide" id="locationId" aria-hidden="true">
+				<div class="modal__overlay" tabindex="-1" data-micromodal-close>
+					<div class="modal__container" role="dialog" aria-modal="true" aria-labelledby="locationId-title">
+					<header class="modal__header">
+						<h2 class="modal__title" id="locationId-title"><span class="fas fa-plus"></span>&nbsp;&nbsp;Add New Location</h2>
+						<button class="modal__close" aria-label="Close modal" data-micromodal-close></button>
+					</header>
+					<main class="modal__content" id="locationId-content">
+						<table>
+							<tr>
+								<td class="label">ID</td>
+								<td><input type="text" v-model="locationId" placeholder="Location ID" required></td>
+							</tr>
+	
+							<tr>
+								<td class="label">Name</td>
+								<td><input type="text" v-model="locationName" placeholder="Name" required></td>
+							</tr>
+						</table>
+					</main>
+					<footer class="modal__footer">
+						<button class="modal__btn modal__btn-primary" @click="addLocation">Submit</button>
+						<button class="modal__btn" data-micromodal-close aria-label="Close this dialog window">Close</button>
+					</footer>
+					</div>
+				</div>
+			</div>
+
+			<!-- ADD MENU FORM -->
+			<div class="modal micromodal-slide" id="menuId" aria-hidden="true">
+				<div class="modal__overlay" tabindex="-1" data-micromodal-close>
+					<div class="modal__container" role="dialog" aria-modal="true" aria-labelledby="menuId-title" style="height: 38rem;">
+					<header class="modal__header">
+						<h2 class="modal__title" id="menuId-title"><span class="fas fa-layer-group"></span>&nbsp;&nbsp;Add New Menu</h2>
+						<button class="modal__close" aria-label="Close modal" data-micromodal-close></button>
+					</header>
+					<main class="modal__content" id="menuId-content">
+						<table>
+							<tr>
+								<td class="label"></td>
+								<td><span class="target">{{ activeLocation.name }}</span><br><span>#{{ activeLocation.id}}</span>
+									<span v-if="activeLocation.type=='child'">#{{ activeLocation.child }}</span>
+								</td>
+							</tr>
+							<tr>
+								<td  v-if="activeLocation.type!='child'" class="label">Icons <i :class="menu.icon" aria-hidden="true"></i></td>
+								<td>
+									
+									<input  v-if="activeLocation.type!='child'" type="text" class="icp icp-glyps" id="menuIcon" v-model="menu.icon" @click="showIconList()">
+									<!-- <select v-model="menu.icon">
+										<option v-for="icons in fontawesome" :value="icons">{{ icons | removePrefixes}}</option>
+									</select> -->
+								</td>
+							</tr>
+							<tr>
+								<td class="label">Name</td>
+								<td><input class="not-icp=glyps" type="text" v-model="menu.name" placeholder="Option Name" required></td>
+							</tr>
+
+							<tr v-if="activeLocation.type!='child'">
+								<td class="label">Type</td>
+								<td>
+									<select v-model="menu.type">
+										<option value="single">Menu Item</option>
+										<option value="multi">Menu Folder</option>
+									</select>
+								</td>
+							</tr>
+
+							<template v-if="menu.type=='single'">
+								<tr>
+									<td class="label">Link</td>
+									<td><input type="text" v-model="menu.link" placeholder="Link" required></td>
+								</tr>
+	
+								<tr v-if="isIframe==true">
+									<td></td>
+									<td><span style="font-size: 9pt; color: red; margin-bottom: 1rem;" >{{ linkErrorMessage }}</span></td>
+								</tr>
+
+								<tr> 
+									<td class="label"></td>
+									<td>
+										<input v-if="activeLocation.type != 'child'" type="checkbox" @click="isIconPath=!isIconPath" :checked="isIconPath"> <span v-if="activeLocation.type != 'child'" class="checkbox">Use a custom image icon</span><br>
+										<input type="checkbox" @click="isIframe=!isIframe" :checked="isIframe"> <span  class="checkbox">Open inside dashboard (iframe)</span>
+									</td>
+								</tr>
+	
+								<tr v-if="isIframe">
+									<td class="label">Title</td>
+									<td><input type="text" v-model="iframeTitle" placeholder="Iframe Title" required></td>
+								</tr>
+	
+								<tr v-if="isIframe">
+									<td class="label">Description</td>
+									<td><input type="text" v-model="iframeDescription" placeholder="Iframe Description" required></td>
+								</tr>
+								<tr v-if="isIframe">
+									<td class="label"></td>
+									<td><input type="checkbox" @click="iframeModal=!iframeModal" :checked="iframeModal"> <span class="checkbox">Open in Modal</span></td>
+								</tr>
+	
+								<tr v-if="isIconPath">
+									<td class="label">Icon Path</td>
+									<td><input type="text" v-model="iconPath" placeholder="Icon Path (e.g. website.com/profile.png)" required></td>
+								</tr>
+
+							</template>
+
+							<tr>
+								<td class="label">Menu Location</td>
+								<td>
+									<select v-model="menu.location" id="">
+										<option value="top">Top</option>
+										<option value="bottom">Bottom</option>
+										<option value="after">After a specific menu</option>
+									</select>
+								</td>
+							</tr>
+
+							<tr v-if="menu.location=='after'">
+								<td class="label"></td>
+								<td>
+									<select v-model="menu.locationTarget" id="">
+										<option value="conversations">Conversations</option>
+										<option value="appointment-request">Opportunities</option>
+										<option value="marketing">Marketing</option>
+										<option value="reporting">Reporting</option>
+										<option value="appointment">Scheduling</option>
+										<option value="reviews">Reputation</option>
+										<option value="customers">Contacts</option>
+										<option value="funnels-websites">Funnels</option>
+										<option value="triggers">Triggers</option>
+										<option value="online-analysis">Online Listings</option>
+										<option value="phone-calls">Phone Calls</option>
+									</select>
+								</td>
+							</tr>
+						</table>
+					</main>
+
+					<footer class="modal__footer">
+						<button class="modal__btn modal__btn-primary" @click="addMenu">Submit</button>
+						<button class="modal__btn" data-micromodal-close aria-label="Close this dialog window">Close</button>
+					</footer>
+					</div>
+				</div>
+			</div>
+
+			<!-- ADD MENU FORM -->
+			<div class="modal micromodal-slide" id="menuChildId" aria-hidden="true">
+				<div class="modal__overlay" tabindex="-1" data-micromodal-close>
+					<div class="modal__container" role="dialog" aria-modal="true" aria-labelledby="menuId-title" style="height: 38rem;">
+					<header class="modal__header">
+						<h2 class="modal__title" id="menuId-title"><span class="fas fa-layer-group"></span>&nbsp;&nbsp;Add New Child Menu</h2>
+						<button class="modal__close" aria-label="Close modal" data-micromodal-close></button>
+					</header>
+					<main class="modal__content" id="menuId-content">
+						<table>
+							<tr>
+								<td class="label"></td>
+								<td><span class="target">{{ activeLocation.name }}</span><br><span>#{{ activeLocation.id}}</span>
+									<span v-if="activeLocation.type=='child'">#{{ activeLocation.child }}</span>
+								</td>
+							</tr>
+							<tr>
+								<td class="label">Name</td>
+								<td><input class="not-icp=glyps" type="text" v-model="menu.name" placeholder="Option Name" required></td>
+							</tr>
+
+							<template v-if="menu.type=='single'">
+								<tr>
+									<td class="label">Link</td>
+									<td><input type="text" v-model="menu.link" placeholder="Link" required></td>
+								</tr>
+	
+								<tr v-if="isIframe==true">
+									<td></td>
+									<td><span style="font-size: 9pt; color: red; margin-bottom: 1rem;" >{{ linkErrorMessage }}</span></td>
+								</tr>
+
+								<tr> 
+									<td class="label"></td>
+									<td>
+										<input v-if="activeLocation.type != 'child'" type="checkbox" @click="isIconPath=!isIconPath" :checked="isIconPath"> <span v-if="activeLocation.type != 'child'" class="checkbox">Use a custom image icon</span><br>
+										<input type="checkbox" @click="isIframe=!isIframe" :checked="isIframe"> <span  class="checkbox">Open inside dashboard (iframe)</span>
+									</td>
+								</tr>
+	
+								<tr v-if="isIframe">
+									<td class="label">Title</td>
+									<td><input type="text" v-model="iframeTitle" placeholder="Iframe Title" required></td>
+								</tr>
+	
+								<tr v-if="isIframe">
+									<td class="label">Description</td>
+									<td><input type="text" v-model="iframeDescription" placeholder="Iframe Description" required></td>
+								</tr>
+								<tr v-if="isIframe">
+									<td class="label"></td>
+									<td><input type="checkbox" @click="iframeModal=!iframeModal" :checked="iframeModal"> <span class="checkbox">Open in Modal</span></td>
+								</tr>
+	
+								<tr v-if="isIconPath">
+									<td class="label">Icon Path</td>
+									<td><input type="text" v-model="iconPath" placeholder="Icon Path (e.g. website.com/profile.png)" required></td>
+								</tr>
+							</template>
+
+							<tr v-if="menu.location=='after'">
+								<td class="label"></td>
+								<td>
+									<select v-model="menu.locationTarget" id="">
+										<option value="conversations">Conversations</option>
+										<option value="appointment-request">Opportunities</option>
+										<option value="marketing">Marketing</option>
+										<option value="reporting">Reporting</option>
+										<option value="appointment">Scheduling</option>
+										<option value="reviews">Reputation</option>
+										<option value="customers">Contacts</option>
+										<option value="funnels-websites">Funnels</option>
+										<option value="triggers">Triggers</option>
+										<option value="online-analysis">Online Listings</option>
+										<option value="phone-calls">Phone Calls</option>
+									</select>
+								</td>
+							</tr>
+						</table>
+					</main>
+
+					<footer class="modal__footer">
+						<button class="modal__btn modal__btn-primary" @click="addMenu">Submit</button>
+						<button class="modal__btn" data-micromodal-close aria-label="Close this dialog window">Close</button>
+					</footer>
+					</div>
+				</div>
+			</div>
+
+
+			<div class="modal micromodal-slide" id="editMenuId" aria-hidden="true">
+				<div class="modal__overlay" tabindex="-1" data-micromodal-close>
+					<div class="modal__container" role="dialog" aria-modal="true" aria-labelledby="editMenuId-title" style="height: 38rem;">
+					<header class="modal__header">
+						<h2 class="modal__title" id="editMenuId-title"><span class="fas fa-layer-group"></span>&nbsp;&nbsp;Edit Menu</h2>
+						<button class="modal__close" aria-label="Close modal" data-micromodal-close></button>
+					</header>
+					<main class="modal__content" id="editMenuId-content">
+						<table v-if="isEdit==true">
+							<tr>
+								<td class="label"></td>
+								<td><span class="target">{{ edit.location.name }}</span><br><span>#{{ edit.location.id}}</span> <span v-if="typeof edit.isChild!='undefined'">#{{ edit.parent.name }}</span></td>
+							</tr>
+							<tr v-if="typeof edit.isChild=='undefined'">
+								<td v-if="typeof edit.isChild=='undefined'" class="label">Icons <i :class="edit.menu.icon" aria-hidden="true"></i></td>
+								<td>
+									<input v-if="typeof edit.isChild=='undefined'" type="text" class="icp icp-glyps" v-model="edit.menu.icon" @click="showEditIconList()">
+									<!-- <select v-model="edit.menu.icon">
+										<option v-for="icons in fontawesome" :value="icons" :checked="icons==edit.menu.icon">{{ icons | removePrefixes }}</option>
+									</select> -->
+								</td>
+							</tr>
+							<tr>
+								<td class="label">Name</td>
+								<td><input class="not-icp-glyps" type="text" v-model="edit.menu.name" placeholder="Option Name" required></td>
+							</tr>
+
+							<tr v-if="edit.type == 'single'">
+								<td class="label">Link</td>
+								<td><input type="text" v-model="edit.menu.link" placeholder="Link" required></td>
+							</tr>
+
+							<tr>
+								<td class="label"></td>
+								<td><input v-if="typeof edit.isChild=='undefined'" type="checkbox" @click="edit.menu.isIconPath=!edit.menu.isIconPath" :checked="edit.menu.isIconPath"> <span v-if="typeof edit.isChild=='undefined'"  class="checkbox">Use a custom image icon</span><br>
+									<input type="checkbox" @click="edit.menu.isIframe=!edit.menu.isIframe" :checked="edit.menu.isIframe"> <span  class="checkbox">Open inside dashboard (iframe)</span></td>
+							</tr>
+
+							<tr v-if="edit.menu.isIframe">
+								<td class="label">Title</td>
+								<td><input type="text" v-model="edit.menu.iframe.title" placeholder="Iframe Title" required></td>
+							</tr>
+
+							<tr v-if="edit.menu.isIframe">
+								<td class="label">Description</td>
+								<td><input type="text" v-model="edit.menu.iframe.description" placeholder="Iframe Description" required></td>
+							</tr>
+
+							<tr v-if="edit.menu.isIframe">
+								<td class="label"></td>
+								<td><input type="checkbox" @click="edit.menu.iframe.modal=!edit.menu.iframe.modal" :checked="edit.menu.iframe.modal"> <span class="checkbox">Open in Modal</span></td>
+							</tr>
+
+							<tr v-if="edit.menu.isIconPath">
+								<td class="label">Icon Path</td>
+								<td><input type="text" v-model="edit.menu.iconPath" placeholder="Icon Path (e.g. website.com/profile.png)" required></td>
+							</tr>
+
+
+							<tr v-if="typeof edit.isChild=='undefined'">
+								<td class="label">Menu Location</td>
+								<td>
+									<select v-model="edit.menu.location" id="">
+										<option value="top">Top</option>
+										<option value="bottom">Bottom</option>
+										<option value="after">After a specific menu</option>
+									</select>
+								</td>
+							</tr>
+
+							<tr v-if="edit.menu.location=='after'">
+								<td class="label"></td>
+								<td>
+									<select v-model="edit.menu.locationTarget" id="">
+										
+										<option value="conversations" :selected="edit.menu.locationTarget==''">Conversations</option>
+										<option value="appointment-request" :selected="edit.menu.locationTarget=='appointment-request'">Opportunities</option>
+										<option value="marketing" :selected="edit.menu.locationTarget=='marketing'">Marketing</option>
+										<option value="reporting" :selected="edit.menu.locationTarget=='reporting'">Reporting</option>
+										<option value="appointment" :selected="edit.menu.locationTarget=='appointment'">Scheduling</option>
+										<option value="reviews" :selected="edit.menu.locationTarget=='reviews'">Reputation</option>
+										<option value="customers" :selected="edit.menu.locationTarget=='customers'">Contacts</option>
+										<option value="funnels-websites" :selected="edit.menu.locationTarget=='funnels-websites'">Funnels</option>
+										<option value="triggers" :selected="edit.menu.locationTarget=='triggers'">Triggers</option>
+										<option value="online-analysis" :selected="edit.menu.locationTarget=='online-analysis'">Online Listings</option>
+										<option value="phone-calls" :selected="edit.menu.locationTarget=='phone-calls'">Phone Calls</option>
+									</select>
+								</td>
+							</tr>
+						</table>
+					</main>
+					<footer class="modal__footer">
+						<button class="modal__btn modal__btn-primary" @click="updateRepo">Update</button>
+					</footer>
+					</div>
+				</div>
+			</div>
+
+			<div class="modal micromodal-slide" id="editChildMenu" aria-hidden="true">
+				<div class="modal__overlay" tabindex="-1" data-micromodal-close>
+					<div class="modal__container" role="dialog" aria-modal="true" aria-labelledby="editMenuId-title" style="height: 38rem;">
+					<header class="modal__header">
+						<h2 class="modal__title" id="editMenuId-title"><span class="fas fa-layer-group"></span>&nbsp;&nbsp;Edit Child Menu</h2>
+						<button class="modal__close" aria-label="Close modal" data-micromodal-close></button>
+					</header>
+					<main class="modal__content" id="editMenuId-content">
+						<table v-if="isEdit==true">
+							<tr>
+								<td class="label"></td>
+								<td><span class="target">{{ edit.location.name }}</span><br><span>#{{ edit.location.id}}</span> <span v-if="typeof edit.isChild!='undefined'">#{{ edit.parent.name }}</span></td>
+							</tr>
+							<tr>
+								<td class="label">Name</td>
+								<td><input class="not-icp-glyps" type="text" v-model="edit.menu.name" placeholder="Option Name" required></td>
+							</tr>
+
+							<tr>
+								<td class="label">Link</td>
+								<td><input type="text" v-model="edit.menu.link" placeholder="Link" required></td>
+							</tr>
+
+							<tr v-if="edit.menu.isIframe">
+								<td class="label">Title</td>
+								<td><input type="text" v-model="edit.menu.iframe.title" placeholder="Iframe Title" required></td>
+							</tr>
+
+							<tr v-if="edit.menu.isIframe">
+								<td class="label">Description</td>
+								<td><input type="text" v-model="edit.menu.iframe.description" placeholder="Iframe Description" required></td>
+							</tr>
+
+							<tr v-if="edit.menu.isIframe">
+								<td class="label"></td>
+								<td><input type="checkbox" @click="edit.menu.iframe.modal=!edit.menu.iframe.modal" :checked="edit.menu.iframe.modal"> <span class="checkbox">Open in Modal</span></td>
+							</tr>
+
+						</table>
+					</main>
+					<footer class="modal__footer">
+						<button class="modal__btn modal__btn-primary" @click="updateRepo">Update</button>
+					</footer>
+					</div>
+				</div>
+			</div>
+
+
+			<div class="modal micromodal-slide" id="generateCode" aria-hidden="true">
+				<div class="modal__overlay" tabindex="-1" data-micromodal-close style="z-index: 1;">
+					<div class="modal__container" role="dialog" aria-modal="true" aria-labelledby="generateCode-title">
+					<header class="modal__header">
+						<h2 class="modal__title" id="generateCode-title"><span class="fas fa-code"></span>&nbsp;&nbsp;Generate Code</h2>
+						<button class="modal__close" aria-label="Close modal" data-micromodal-close></button>
+					</header>
+					<main class="modal__content" id="generateCode-content">
+						<textarea :value="generatedCode"></textarea>
+
+						<!-- <input type="text" class="save-template" v-model="templateName" placeholder="Name of Template"><button @click="saveTemplate()" class="save-template-button">Save Template</button> -->
+					</main>
+					<footer class="modal__footer">
+
+						<button class="modal__btn" data-micromodal-close aria-label="Close this dialog window">Close</button>
+					</footer>
+					</div>
+				</div>
+			</div>
+
+
+			<div class="modal micromodal-slide" id="importCode" aria-hidden="true">
+				<div class="modal__overlay" tabindex="-1" data-micromodal-close>
+					<div class="modal__container" role="dialog" aria-modal="true" aria-labelledby="importCode-title">
+					<header class="modal__header">
+						<h2 class="modal__title" id="importCode-title"><span class="fas fa-upload"></span>&nbsp;&nbsp;Import Code</h2>
+						<button class="modal__close" aria-label="Close modal" data-micromodal-close></button>
+					</header>
+					<main class="modal__content" id="importCode-content">
+						<textarea v-model="importedCode"></textarea>
+					</main>
+					<footer class="modal__footer">
+						<button class="modal__btn modal__btn-primary" @click="importCode(false)">Submit</button>
+						<button class="modal__btn" data-micromodal-close aria-label="Close this dialog window">Close</button>
+					</footer>
+					</div>
+				</div>
+			</div>
+
+
+			<div class="modal micromodal-slide" id="cssModal" aria-hidden="true">
+				<div class="modal__overlay" tabindex="-1" data-micromodal-close>
+					<div class="modal__container" role="dialog" aria-modal="true" aria-labelledby="css-title">
+					<header class="modal__header">
+						<h2 class="modal__title" id="css-title"><span class="fas fa-code"></span>&nbsp;&nbsp;Location Specific Logo CSS</h2>
+						<button class="modal__close" aria-label="Close modal" data-micromodal-close></button>
+					</header>
+					<main class="modal__content" id="css-content">
+						<table>
+
+							<tr>
+								<td class="label">Location ID</td>
+								<td><input type="text" v-model="cssLocationId" placeholder="Location ID" required></td>
+							</tr>
+
+							<tr>
+								<td class="label">Name</td>
+								<td><input type="text" v-model="cssLocationName" placeholder="Name" required></td>
+							</tr>
+
+
+							<tr>
+								<td class="label">Image URL</td>
+								<td><input type="text" v-model="cssCode" placeholder="Image Link" required></td>
+							</tr>
+
+							
+						</table>
+					</main>
+					<footer class="modal__footer">
+						<button class="modal__btn modal__btn-primary" @click="generateCSS()">Generate Code</button>
+						<button class="modal__btn" data-micromodal-close aria-label="Close this dialog window">Close</button>
+					</footer>
+					</div>
+				</div>
+			</div>
+
+
+
+			<!-- USER SETTINGS -->
+			<div class="modal micromodal-slide" id="userSettings" aria-hidden="true">
+				<div class="modal__overlay" tabindex="-1">
+					<div class="modal__container" role="dialog" aria-modal="true" aria-labelledby="css-title" style="width: 33rem;">
+					<header class="modal__header">
+						<h2 class="modal__title" id="css-title"><span class="fas fa-code"></span>&nbsp;&nbsp;User Settings</h2>
+						<button class="modal__close" aria-label="Close modal" data-micromodal-close @click="updateLocationConfig"></button>
+					</header>
+					<user-settings :config="locationConfig" v-on:update="generateUserSettings"></user-settings>
+					<footer class="modal__footer">
+						<button class="modal__btn" data-micromodal-close @click="updateLocationConfig" aria-label="Close this dialog window">Close</button>
+					</footer>
+					</div>
+				</div>
+			</div>
+
+
+			<!-- SNIPPET FORM -->
+			<div class="modal micromodal-slide" id="snippetSettings" aria-hidden="true">
+				<div class="modal__overlay" tabindex="-1">
+					<div class="modal__container" role="dialog" aria-modal="true" aria-labelledby="snippet-container">
+						<snippet-form
+							v-on:update="generateCustomizer"
+							v-on:close="updateLocationConfig"
+							ref="dashCustomizer"
+							:config="locationConfig"
+						></snippet-form>
+					</div>
+				</div>
+			</div>
+
+
+
+
+
+
+			<div class="modal micromodal-slide" id="cssResult" aria-hidden="true">
+				<div class="modal__overlay" tabindex="-1">
+					<div class="modal__container" role="dialog" aria-modal="true" aria-labelledby="cssResult-title">
+					<header class="modal__header">
+						<h2 class="modal__title" id="cssResult-title"><span class="fas fa-code"></span>&nbsp;&nbsp;Location Specific Logo CSS</h2>
+						<button class="modal__close" aria-label="Close modal" @click="updateLocationConfig" data-micromodal-close></button>
+					</header>
+					<main class="modal__content" id="cssResult-content">
+						<textarea v-model="cssResult" disabled></textarea>
+					</main>
+					<footer class="modal__footer">
+						<button class="modal__btn" @click="updateLocationConfig" data-micromodal-close aria-label="Close this dialog window">Close</button>
+					</footer>
+					</div>
+				</div>
+			</div>
+
+
+		</div>
+
+	
+
+
+	<script src="js/library/pickr.min.js"></script>
+	<script src="js/library/jquery.js"></script>
+	<script src="js/library/jquery-ui.js"></script>
+	<script src="//netdna.bootstrapcdn.com/bootstrap/3.1.1/js/bootstrap.min.js"></script>
+	<script src="js/library/fontawesome.js" crossorigin="anonymous"></script>
+	<script src="js/library/fontawesome-iconpicker.min.js"></script>
+	<script src="js/library/micromodal.js"></script>
+	<script src="js/library/vue.js"></script>
+	<script src="js/library/http-vue-loader.js"></script>
+	<script src="js/library/sortable.js"></script>
+	<script src="js/library/vue-resource.js"></script>
+	<script src="js/library/switch.js"></script>
+	<script src="fontawesome.js"></script>
+	<script src="js/app.js"></script>		
+	<script>
+
+		
+	</script>
+	</body>
+
+	
+
+</html>
+
+

@@ -1,0 +1,90 @@
+#app {
+  font-family: Lato, sans-serif;
+}
+#app .switch-button {
+  margin: 10px 0;
+}
+#app .bottom-message {
+  margin-top: 20px;
+  font-size: 125%;
+}
+
+
+.switch-button-control {
+  display: inline-grid;
+  float: right;
+  font-size: 8pt;
+  position: relative;
+  top: -10px;
+}
+
+.left .switch-button-control {
+  margin-right: 5px;
+  float: left;
+}
+
+.switch-button-control .switch-button {
+  height: 1.6em;
+  width: calc(1.6em * 2);
+  border: 2px solid var(--color);
+  box-shadow: inset 0px 0px 2px 0px rgba(0, 0, 0, 0.33);
+  border-radius: 1.6em;
+  transition: all 0.3s ease-in-out;
+  cursor: pointer;
+}
+.switch-button-control .switch-button .button {
+  height: calc( 1.6em - (2 * 2px) );
+  width: calc( 1.6em - (2 * 2px) );
+  border: 2px solid var(--color);
+  border-radius: calc( 1.6em - (2 * 2px) );
+  background: var(--color);
+  transition: all 0.3s ease-in-out;
+}
+.switch-button-control .switch-button.enabled {
+  background-color: var(--color);
+  box-shadow: none;
+}
+.switch-button-control .switch-button.enabled .button {
+  background: white;
+  transform: translateX(calc(calc( 1.6em - (2 * 2px) ) + (2 *2px)));
+}
+.switch-button-control .switch-button-label {
+  margin-left: 10px;
+}
+
+.switch-button:not(.enabled){
+  --color: rgb(177, 177, 177) !important;
+  border: 2px solid rgb(177, 177, 177);
+}
+
+
+
+
+.flip-list-move {
+  transition: transform 0.5s;
+}
+.no-move {
+  transition: transform 0s;
+}
+.ghost {
+  opacity: 0.5;
+  background: #c8ebfb;
+}
+.list-group {
+  min-height: 20px;
+}
+.list-group-item {
+  cursor: move;
+}
+.list-group-item i {
+  cursor: pointer;
+}
+#app {
+  font-family: "Avenir", Helvetica, Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  color: #2c3e50;
+}
+#app .logo {
+  text-align: center;
+}
