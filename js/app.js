@@ -32,7 +32,6 @@ var app = new Vue({
                   icon: null,
                   name: null,
                   type: "single",
-                  accountType: "admin",
                   link: null,
                   location: "bottom",
                   locationTarget: "conversations",
@@ -56,10 +55,9 @@ var app = new Vue({
                         "dashboardCustomizer": null,
                         "checkIn": null,
                         "isTab": false,
-                        "accountSelected": 'admin',
                         "locationLogo": true,
-                        "userSettings": null
-                        
+                        "userSettings": null,
+                        "adminSettings": null
                   },
                   {
                         "id":"all-location",
@@ -69,9 +67,9 @@ var app = new Vue({
                         "dashboardCustomizer": null,
                         "checkIn": null,
                         "isTab": false,
-                        "accountSelected": 'admin',
                         "locationLogo": true,
-                        "userSettings": null
+                        "userSettings": null,
+                        "adminSettings": null
                   }
                   
             ],
@@ -198,12 +196,14 @@ var app = new Vue({
              * COMPONENTS GENERATED CONFIGURATION
              * 
              */
-            generateUserSettings(value){
+            generateUserSettings(value, status){
+                  console.log(status);
                   var _self = this;
                   _self.repo.forEach(function(location, index){
                         if(location.id==_self.locationSelected){
-                              _self.repo[index].userSettings = value;
-                              console.log(_self.repo[index].userSettings);
+                              if(status=='user') _self.repo[index].userSettings = value;
+                              else if(status=='admin') _self.repo[index].adminSettings = value;
+
                               _self.locationConfig = _self.repo[index];
                         }
                   });
@@ -342,8 +342,8 @@ var app = new Vue({
             onMove({ relatedContext, draggedContext }) {
                   const relatedElement = relatedContext.element;
                   const draggedElement = draggedContext.element;
-                  console.log("MOving");
-                  return draggedElement.location === relatedElement.location;
+
+                  return draggedElement.location === relatedElement.location && draggedElement.locationid === relatedElement.locationid;
             },
       
 
@@ -503,7 +503,7 @@ var app = new Vue({
                         link: this.menu.link,
                         isIframe: false,
                         isIconPath: false,
-                        accountType: activeLocation.accountType,
+                        locationid: activeLocation.id,
                         location: this.menu.location || "bottom",
                         type: this.menu.type
                   };
@@ -767,33 +767,6 @@ var app = new Vue({
                   }
                   return isExist;
             },
-
-            accountSelection: function(location, account){
-                  var _self = this;
-                  var index = _self.repo.findIndex(val => val.id == location.id);
-                  _self.activeLocation = {id: location.id, name: location.name, type: location.type, accountType: account};
-                  switch(account){
-                        case 'user':
-                              _self.$el.querySelector(`#${location.id}-admin-settings`).classList.remove('settings-account-selected');
-                              _self.$el.querySelector(`#${location.id}-${account}-settings`).classList.add('settings-account-selected');
-
-                              
-                              _self.repo[index].accountSelected = account;
-
-                              _self.menu.accountType = account;
-                              console.log(_self.menu);
-                              break;
-                        case 'admin':
-                              _self.$el.querySelector(`#${location.id}-user-settings`).classList.remove('settings-account-selected');
-                              _self.$el.querySelector(`#${location.id}-${account}-settings`).classList.add('settings-account-selected');
-
-                              _self.repo[index].accountSelected = account;
-
-                              _self.menu.accountType = account;
-                              break;
-                  }
-            }
-            
       }
 });
 

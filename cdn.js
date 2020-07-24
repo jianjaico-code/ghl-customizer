@@ -539,22 +539,41 @@ async function locationLogoInit(){
                 if (hl && hl.location && hl.location._data)
                 {
                 logo_url='';
-                // console.log(hl.location);
+                locationCookie = '';
                     if (hl.location._data.logo_url) {
                         logo_url = hl.location._data.logo_url;
+                        locationCookie = document.cookie = `locationUrl=${logo_url}`;
                     } else {
-                  if (v.company && v.company.logoURL)
-                           logo_url = v.company.logoURL;
+                        if (v.company && v.company.logoURL) logo_url = v.company.logoURL;
+                        else logo_url = getCookie("locationUrl")
                     }
                     if (logo_url.length>0 && document.querySelector('.hl_navbar--logo img').src!=logo_url)
                     {
                         document.querySelector('.hl_navbar--logo img').src=logo_url;
                     }
                 }
+                else{
+                    document.querySelector('.hl_navbar--logo img').src= getCookie("locationUrl");
+                }
             }
         });
     }
 }
+
+function getCookie(cname) {
+    var name = cname + "=";
+    var ca = document.cookie.split(';');
+    for(var i = 0; i < ca.length; i++) {
+      var c = ca[i];
+      while (c.charAt(0) == ' ') {
+        c = c.substring(1);
+      }
+      if (c.indexOf(name) == 0) {
+        return c.substring(name.length, c.length);
+      }
+    }
+    return "";
+  }
 /****************************************/
 /****************************************/
 /****************************************/
@@ -584,7 +603,7 @@ function userSettings(){
                     }
             });
 
-            jQuery("head").append(`<style>${style}</style>`);
+            jQuery("head").append(`<style class="toolkitstyles usersettings">${style}</style>`);
 
             $("body").on('DOMSubtreeModified', ".hl_wrapper", function () {
                     $('.hl_settings--nav').find("li").each(function(){
@@ -890,7 +909,7 @@ function campaignToggle(schema){
             opacity:50%;
             pointer-events: none;
             } .mktk-draft>div:first-child a::before,.mktk-published>div:first-child a::before{height:10px;width:10px;margin-top:4px;margin-left:-5px;margin-right:6px;background-color:#37ca37;border-radius:50%;display:inline-block;content:' '}.mktk-draft>div:first-child a::before{background-color:#929292}`;
-            jQuery('head').append('<style id="campaignstyles">'+style+'</style>');
+            jQuery('head').append('<style class="toolkitstyles" id="campaignstyles">'+style+'</style>');
         }
         jQuery("body").on('DOMSubtreeModified', ".hl_customer-acquisition--table", async function()
         {
@@ -989,7 +1008,7 @@ function triggerToggle(schema){
         if (jQuery('#triggerstyles').length<=0)
         {
             style = `.trigger_actions {position:absolute;margin-top:-20px;}.active-true .dropdown button{background:#37ca37!important;color:#fff}.active-true .triggers_name::before,.active-false .triggers_name::before{height:10px;width:10px;margin-top:4px;margin-left:-5px;margin-right:6px;background-color:#37ca37;border-radius:50%;display:inline-block;content:' '}.active-false .triggers_name::before{background-color:#929292}`;
-            jQuery('head').append('<style id="triggerstyles">'+style+'</style>');
+            jQuery('head').append('<style class="toolkitstyles" id="triggerstyles">'+style+'</style>');
         }        
 
         v = document.getElementById('app').__vue__;
@@ -1103,9 +1122,11 @@ function opportunityTags(schema){
                  function() {
                 // console.log('tag each');
                       p = $(this).closest('.card-body');
-                      if (!p.hasClass('tag-'+$(this).text())) 
+                      tag = $(this).text();
+                      if (tag=='group') tag='group2';
+                      if (!p.hasClass('tag-'+tag)) 
                       {
-                           p.addClass('tag-'+$(this).text());
+                           p.addClass('tag-'+tag);
                       } 
                  });
             // remove classes
@@ -1201,7 +1222,7 @@ function driveLink(schema){
 
      function css()
           {
-          return `<style id="gdrivestyles">
+            return `<style class="toolkitstyles" id="gdrivestyles">
           #gdrive .gdrive-open:hover + #gdriveFiles,
           #gdriveFiles:hover {
                display: block !important;
@@ -1257,7 +1278,7 @@ function opportunityDate(schema)
         if ($('#opdatecss').length<=0)
         {
             style = `i.fa-calendar-plus-o{float:right;text-align:right}i.fa-calendar-plus-o span.opdate{display:block}`;
-            $('head').append('<style id=opdatecss>'+style+'</style'); 
+            $('head').append('<style class="toolkitstyles" id=opdatecss>'+style+'</style'); 
         }
 
      jQuery("body").on('DOMSubtreeModified', ".hl_opportunities", async function(){
@@ -1309,7 +1330,7 @@ function conversationFilter(schema){
                     mlsearch.after(div_select);
             
             if ($('#messagefilterstyles').length<=0) //fix to show the load more...
-                $('head').append('<style id="messagefilterstyles"> .messages-list { height: calc(100vh - 320px);}</style>');
+            $('head').append('<style class="toolkitstyles" id="messagefilterstyles"> .messages-list { height: calc(100vh - 320px);}</style>');
 
             }
         }
@@ -1323,7 +1344,7 @@ function conversationFilter(schema){
 
             if ($('#messagefilterstyles').length<=0)
             {
-                $('head').append('<style id="messagefilterstyles">'+style+'</style>');
+                $('head').append('<style class="toolkitstyles" id="messagefilterstyles">'+style+'</style>');
             } else 
             {
                 $('#messagefilterstyles').html(style);
@@ -1351,7 +1372,8 @@ function conversationFilter(schema){
                     window.loading_users=true;
                     // console.log('loading users');
                     css = '.messages-list-search{margin-top:-20px;z-index:6;position:relative}.select-user{margin-top:-10px;z-index:7;position:relative;margin-bottom:20px;font-size:12px;text-align:center;font-weight:700}.select-user select{display:block;margin:auto;padding:3px;border:1px #ccc solid;border-radius:5px}';
-                    jQuery("head").append(`<style>${css}</style>`);
+                    if (!document.querySelector('#conversation_user_dropdown'))
+                        jQuery("head").append(`<style class="toolkitstyles" id="conversation_user_dropdown">${css}</style>`);
 
                     window.users = Array();
                     window.users.push(['all','All','']);
@@ -1986,7 +2008,7 @@ function wait(selector) {
     });
 }
 
-function wait_prop(selector) {
+function wait_prop(selector,key='') {
     // waits until vue is loaded on property
     var timeout = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 0;
 
@@ -1997,11 +2019,19 @@ function wait_prop(selector) {
     var interval = setInterval(function () {
          var element = document.querySelector(selector);
 
-         if (element && element.__vue__) {
+         if (key=='')
+         {
+             if (element && element.__vue__) {
+                  clearInterval(interval);
+                  resolve();
+             }            
+         } else 
+             if (element && element.__vue__ && element.__vue__[key]) {
+                  clearInterval(interval);
+                  resolve();
+             }            
+         {
 
-              clearInterval(interval);
-
-              resolve();
          }
 
          now = performance.now();
@@ -2019,7 +2049,7 @@ function displayModal(id, title, description, link){
     if(description==null  || description=='null' || typeof description=='undefined') description= "";
     
          var elem = `
-         <style type="text/css">#mktModal .modal-open .modal { overflow-y: hidden; } #mktModal .modal-dialog.modal-xl{height:90%;margin:1.5% auto;width: 95%;
+         <style class="toolkitstyles" id="toolkit_modal_css" type="text/css">#mktModal .modal-open .modal { overflow-y: hidden; } #mktModal .modal-dialog.modal-xl{height:90%;margin:1.5% auto;width: 95%;
               max-width: unset;}#mktModal .modal-content{height:100%;border-radius:0}#mktModal .modal-header{border-radius:0;background:#ffffff;padding:12px 20px;border:0}#mktModal .modal-header h5{color:#616161;font:20px/1.5 Roboto;margin:0;padding:0}#mktModal .modal-header .close{font-size:2.5rem;color:#a0a0a0;top:-1px}#mktModal .modal-body{padding:0}#mktModal .iframe-container{overflow:hidden;height:100%;position:relative}#mktModal .iframe-container iframe{border:0;height:100%;left:0;position:absolute;top:0;width:100%}#mydiv{position:absolute;top: 25%; left: 25%; height: 50%; width: 50%;z-index:10000;background-color:#f1f1f1;border:1px solid #d3d3d3;text-align:center}#mydivheader{padding:10px;cursor:move;z-index:10;background-color:#2196f3;color:#fff}</style>
          <div class='modal fade' id='mktModal' tabindex="-1" role="dialog" aria-labelledby="mktModal" aria-hidden="true" >
                         <div class="modal-dialog modal-dialog-centered modal-xl" role="document">    
@@ -2060,7 +2090,7 @@ function displayIframe(id, title, description, link){
     });
      if(description==null || description=='null') description = "";
      document.querySelector(".hl_wrapper").innerHTML = `
-          <style>
+        <style class="toolkitstyles" id="toolkit_iframe_css">
                .menu-header {
                     padding: 1rem 2rem 0rem;
                     font-size: 13pt;

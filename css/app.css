@@ -224,8 +224,8 @@ body {
       display: inline;
       padding: 5px;
       color: #4a63d6;
-      top: 0px;
-      font-size: 11px;
+      top: -15px;
+      font-size: 14px;
 }
 
 .settings-account:hover{

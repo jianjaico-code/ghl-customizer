@@ -36,6 +36,7 @@
 				ref="checkInElem"
 
 			></custom-check-in>
+
 			<div  id="main" :class="[ sidebar ? 'sidebar-open-body' : 'sidebar-close-body' ]" @click="closeSidebar()">
 				
 				<div class="tools">
@@ -76,10 +77,6 @@
 							viewBox="0 0 192 512">
 								<path fill="currentColor" d="M96 184c39.8 0 72 32.2 72 72s-32.2 72-72 72-72-32.2-72-72 32.2-72 72-72zM24 80c0 39.8 32.2 72 72 72s72-32.2 72-72S135.8 8 96 8 24 40.2 24 80zm0 352c0 39.8 32.2 72 72 72s72-32.2 72-72-32.2-72-72-72-72 32.2-72 72z"></path>
 						</svg>
-						<div>
-							<div @click="accountSelection(location, 'admin')" v-bind:id="location.id+'-admin-settings'" class="settings-account settings-account-selected">Admin</div>
-							<div @click="accountSelection(location, 'user')" v-bind:id="location.id+'-user-settings'" style="right: 5px;" class="settings-account">Users</div>
-						</div>
 						<div 
 							v-if="location.id!='all-location'  && location.isTab==true" 
 							@mouseleave="location.isTab=false"
@@ -101,50 +98,21 @@
 							<draggable :move="onMove" v-bind="dragOptions"  v-model="location.menus" @start="drag=true" @end="drag=false">
 									<div v-for="menu in location.menus"  >
 										
-										<div v-if="menu.accountType=='admin'  && location.accountSelected == 'admin'">
-											<div v-if="menu.type=='single'" class="menu-option" @click.self="updateMenu(location, menu)">
-												<span v-if="menu.isIconPath!=true" :class="menu.icon">&nbsp;&nbsp;</span>
-												<img v-if="menu.isIconPath==true" :src="menu.iconPath" class="menu-image">
-												{{ menu.name }}
-												
-												<span style="float: right;" @click="deleteMenu(menu.id, location.id)"><i class="fas fa-trash" aria-hidden="true"></i></span>
-												<span v-if="menu.location=='top'" style="float: right; margin-right: 5pt;" ><i class="fas fa-arrow-up" aria-hidden="true"></i></span>
-												<span v-else-if="menu.location=='bottom'" style="float: right; margin-right: 5pt;" ><i class="fas fa-arrow-down" aria-hidden="true"></i></span>
-												<span v-else style="float: right; margin-right: 5pt;" ><i class="fas fa-arrows-alt" aria-hidden="true"></i></span>
-											</div>
-	
-											<div v-if="menu.type=='multi'" class="multi-menu">
-	
-												<div  class="menu-option" @click.self="updateMenu(location, menu)">
-													<span v-if="menu.isIconPath!=true" :class="menu.icon">&nbsp;&nbsp;</span>
-													<img v-if="menu.isIconPath==true" :src="menu.iconPath" class="menu-image">
-													{{ menu.name }}
-													
-													<span style="float: right;" @click="deleteMenu(menu.id, location.id)"><i class="fas fa-trash" aria-hidden="true"></i></span>
-													<span v-if="menu.location=='top'" style="float: right; margin-right: 5pt;" ><i class="fas fa-arrow-up" aria-hidden="true"></i></span>
-													<span v-else-if="menu.location=='bottom'" style="float: right; margin-right: 5pt;" ><i class="fas fa-arrow-down" aria-hidden="true"></i></span>
-													<span v-else style="float: right; margin-right: 5pt;" ><i class="fas fa-arrows-alt" aria-hidden="true"></i></span>
-												</div>
-	
-												<draggable group="menu.child" @start="drag=true" @end="drag=false">
-													
-													<div v-for="child in menu.child">
-														<div class="multi-menu-child" @click.self="updateChild(location, menu, child)">
-															{{ child.name }}
-															
-															<span style="float: right;"><i  @click="deleteMenuChild(menu.id, child.name, location.id)"	 class="fas fa-trash" aria-hidden="true"></i></span>
-														</div>
-													</div>
-	
-												</draggable>
-	
-	
-												<div class='add-child' @click="updateChildActiveLocation(location.id, location.name, 'child', menu.name)"><i class="fas fa-plus-circle"></i> Add Child</div>
-											</div>
+								
+										<div v-if="menu.type=='single'" class="menu-option" @click.self="updateMenu(location, menu)">
+											<span v-if="menu.isIconPath!=true" :class="menu.icon">&nbsp;&nbsp;</span>
+											<img v-if="menu.isIconPath==true" :src="menu.iconPath" class="menu-image">
+											{{ menu.name }}
+											
+											<span style="float: right;" @click="deleteMenu(menu.id, location.id)"><i class="fas fa-trash" aria-hidden="true"></i></span>
+											<span v-if="menu.location=='top'" style="float: right; margin-right: 5pt;" ><i class="fas fa-arrow-up" aria-hidden="true"></i></span>
+											<span v-else-if="menu.location=='bottom'" style="float: right; margin-right: 5pt;" ><i class="fas fa-arrow-down" aria-hidden="true"></i></span>
+											<span v-else style="float: right; margin-right: 5pt;" ><i class="fas fa-arrows-alt" aria-hidden="true"></i></span>
 										</div>
 
-										<div v-if="menu.accountType=='user' && location.accountSelected == 'user'">
-											<div v-if="menu.type=='single'" class="menu-option" @click.self="updateMenu(location, menu)">
+										<div v-if="menu.type=='multi'" class="multi-menu">
+
+											<div  class="menu-option" @click.self="updateMenu(location, menu)">
 												<span v-if="menu.isIconPath!=true" :class="menu.icon">&nbsp;&nbsp;</span>
 												<img v-if="menu.isIconPath==true" :src="menu.iconPath" class="menu-image">
 												{{ menu.name }}
@@ -154,44 +122,31 @@
 												<span v-else-if="menu.location=='bottom'" style="float: right; margin-right: 5pt;" ><i class="fas fa-arrow-down" aria-hidden="true"></i></span>
 												<span v-else style="float: right; margin-right: 5pt;" ><i class="fas fa-arrows-alt" aria-hidden="true"></i></span>
 											</div>
-	
-											<div v-if="menu.type=='multi'" class="multi-menu">
-	
-												<div  class="menu-option" @click.self="updateMenu(location, menu)">
-													<span v-if="menu.isIconPath!=true" :class="menu.icon">&nbsp;&nbsp;</span>
-													<img v-if="menu.isIconPath==true" :src="menu.iconPath" class="menu-image">
-													{{ menu.name }}
-													
-													<span style="float: right;" @click="deleteMenu(menu.id, location.id)"><i class="fas fa-trash" aria-hidden="true"></i></span>
-													<span v-if="menu.location=='top'" style="float: right; margin-right: 5pt;" ><i class="fas fa-arrow-up" aria-hidden="true"></i></span>
-													<span v-else-if="menu.location=='bottom'" style="float: right; margin-right: 5pt;" ><i class="fas fa-arrow-down" aria-hidden="true"></i></span>
-													<span v-else style="float: right; margin-right: 5pt;" ><i class="fas fa-arrows-alt" aria-hidden="true"></i></span>
-												</div>
-	
-												<draggable group="menu.child" @start="drag=true" @end="drag=false">
-													
-													<div v-for="child in menu.child">
-														<div class="multi-menu-child" @click.self="updateChild(location, menu, child)">
-															{{ child.name }}
-															
-															<span style="float: right;"><i  @click="deleteMenuChild(menu.id, child.name, location.id)"	 class="fas fa-trash" aria-hidden="true"></i></span>
-														</div>
+
+											<draggable group="menu.child" @start="drag=true" @end="drag=false">
+												
+												<div v-for="child in menu.child">
+													<div class="multi-menu-child" @click.self="updateChild(location, menu, child)">
+														{{ child.name }}
+														
+														<span style="float: right;"><i  @click="deleteMenuChild(menu.id, child.name, location.id)"	 class="fas fa-trash" aria-hidden="true"></i></span>
 													</div>
-	
-												</draggable>
-	
-	
-												<div class='add-child' @click="updateChildActiveLocation(location.id, location.name, 'child', menu.name)"><i class="fas fa-plus-circle"></i> Add Child</div>
-											</div>
+												</div>
+
+											</draggable>
+
+
+											<div class='add-child' @click="updateChildActiveLocation(location.id, location.name, 'child', menu.name)"><i class="fas fa-plus-circle"></i> Add Child</div>
 										</div>
+								
 
 									</div>
 
 									
 							</draggable>
 						</div>
-	
-						<button data-micromodal-trigger="menuId" @click="updateActiveLocation(location.id, location.name, 'menu', null, location.accountSelected)">Add Menu</button>
+						
+						<button data-micromodal-trigger="menuId" @click="updateActiveLocation(location.id, location.name, 'menu', null)">Add Menu</button>
 						<span v-if="location.id!='all-location' && location.id != 'agency-dashboard'" style="float: right;"  class="delete-location" @click="deleteLocation(location.id)"><i class="fas fa-trash" aria-hidden="true"></i></span>
 						
 					</div>
@@ -203,10 +158,6 @@
 					
 				</div>
 			</div>
-
-
-			
-
 
 			<div class="modal micromodal-slide" id="lastSaved" aria-hidden="true">
 				<div class="modal__overlay" tabindex="-1" data-micromodal-close>

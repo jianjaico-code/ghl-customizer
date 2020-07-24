@@ -1,5 +1,9 @@
 <template>
     <main class="modal__content" id="css-content">
+        <div>
+            <div @click="selectUserSettings(config, 'admin')" v-bind:id="config.id+'-admin-settings'" class="settings-account">Admin</div>
+            <div @click="selectUserSettings(config, 'user')" v-bind:id="config.id+'-user-settings'" style="right: 5px;" class="settings-account settings-account-selected">Users</div>
+        </div>
         <div v-for="setting in settings" :key="setting.id" style="width: 49%; display: inline-grid;">
             <switch-button v-model="setting.enable" color="#64bd63"></switch-button>
             <label>{{ setting.title }}</label>
@@ -15,6 +19,7 @@ module.exports = {
     props: ["config"],
     data(){
         return {
+            accountStatus: "user",
             settings: [
                 {
                     id: "company",
@@ -105,6 +110,28 @@ module.exports = {
         }
     },
 
+    methods: {
+        selectUserSettings(location, account){
+                var _self = this;
+                switch(account){
+                    case 'user':
+                            _self.$el.querySelector(`#${location.id}-admin-settings`).classList.remove('settings-account-selected');
+                            _self.$el.querySelector(`#${location.id}-${account}-settings`).classList.add('settings-account-selected');
+
+                            _self.accountStatus = account;
+                            console.log(_self.config.userSettings);
+                            break;
+                    case 'admin':
+                            _self.$el.querySelector(`#${location.id}-user-settings`).classList.remove('settings-account-selected');
+                            _self.$el.querySelector(`#${location.id}-${account}-settings`).classList.add('settings-account-selected');
+
+                            _self.accountStatus = account;
+                            console.log(_self.config.adminSettings);
+                            break;
+                }
+        }
+    },
+
     watch: {
         settings: {
             handler(value){
@@ -114,28 +141,68 @@ module.exports = {
                     if(setting.enable==false) config[setting.id] = false;
                 });
 
-                this.$emit("update", config);
+                this.$emit("update", config, this.accountStatus);
             },
             deep: true
         },
-        config: {
+        accountStatus: {
             handler(value){
                 var _self = this;
-                _self.settings.forEach(function(setting, index){
-                    
-                
-                    if(typeof value.userSettings!='undefined' && value.userSettings!=null){
+                _self.settings.forEach((setting, index) => {
+                    if(value == 'user'){
+                        if(typeof _self.config.userSettings!='undefined' && _self.config.userSettings!=null){
 
-                        var keyIndex = Object.keys(value.userSettings).indexOf(setting.id);
+                        var keyIndex = Object.keys(_self.config.userSettings).indexOf(setting.id);
                         if(keyIndex!=-1) {
                             _self.settings[index]["enable"] = false;
                         }else _self.settings[index]["enable"] = true;
                         
-                    }else _self.settings[index]["enable"] = true;
+                        }else _self.settings[index]["enable"] = true;
+                    }
+                    else if(value == 'admin'){
+                        if(typeof _self.config.adminSettings!='undefined' && _self.config.adminSettings!=null){
+
+                        var keyIndex = Object.keys(_self.config.adminSettings).indexOf(setting.id);
+                        if(keyIndex!=-1) {
+                            _self.settings[index]["enable"] = false;
+                        }else _self.settings[index]["enable"] = true;
+                        
+                        }else _self.settings[index]["enable"] = true;
+                    }
                 });
-            },  
+            },
             deep: true
-        }
+        },
+        // config: {
+        //     handler(value){
+        //         var _self = this;
+        //         _self.settings.forEach(function(setting, index){
+                    
+                
+        //             if(_self.accountStatus == 'user'){
+        //                 if(typeof value.userSettings!='undefined' && value.userSettings!=null){
+
+        //                 var keyIndex = Object.keys(value.userSettings).indexOf(setting.id);
+        //                 if(keyIndex!=-1) {
+        //                     _self.settings[index]["enable"] = false;
+        //                 }else _self.settings[index]["enable"] = true;
+                        
+        //                 }else _self.settings[index]["enable"] = true;
+        //             }
+        //             else if(_self.accountStatus == 'admin'){
+        //                 if(typeof value.adminSettings!='undefined' && value.adminSettings!=null){
+
+        //                 var keyIndex = Object.keys(value.adminSettings).indexOf(setting.id);
+        //                 if(keyIndex!=-1) {
+        //                     _self.settings[index]["enable"] = false;
+        //                 }else _self.settings[index]["enable"] = true;
+                        
+        //                 }else _self.settings[index]["enable"] = true;
+        //             }
+        //         });
+        //     },  
+        //     deep: true
+        // },
     }
 }
 </script>
