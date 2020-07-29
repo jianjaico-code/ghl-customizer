@@ -43,20 +43,29 @@ ready(function() {
             userSettings();
             dashboardCustomizer();
         });
-    });
-    v = document.getElementById('app').__vue__;
-    v.$router.afterEach((to, from) => {
-        // console.log('v router change');
-        logoClick(locationDefault);
-        console.log('router -afterEach');
-        locationMenu();
-        shortcut();
-    
+
+        v = document.getElementById('app').__vue__;
+
+        v.$router.afterEach((to, from) => {
+            // console.log('v router change');
+            logoClick(locationDefault);
+            console.log('router -afterEach');
+            locationMenu();
+            shortcut();
+            generateExpirationCookie();
+        });
     });
 });
 
 
+function generateExpirationCookie(){
+    var dateNow = new Date();
+    var keyword = "expiration";
 
+    dateNow.setDate(dateNow.getDate() + 14);
+
+    if(getCookie(keyword).length <= 0) document.cookie = `${keyword}= ${dateNow.toLocaleDateString()}; expires=${dateNow.toUTCString()}`;
+}
 
 
 function dynamicLocationChange(){
@@ -68,8 +77,8 @@ function dynamicLocationChange(){
         console.log('dynamicLocationChage() v router afterEach');
         markLocation();
         wait_prop('#app',10000).then(function() {
-         console.log('waiting until vue is loaded');
-         window.setTimeout(markLocation(),100);
+            console.log('waiting until vue is loaded');
+            window.setTimeout(markLocation(),100);
         });
     });
 }
@@ -535,25 +544,24 @@ async function locationLogoInit(){
         $("body").on('DOMSubtreeModified', ".hl_wrapper", function () {
             if (document.querySelectorAll('.hl_navbar--logo').length>0 && document.querySelectorAll('.hl_wrapper').length>0) {
 
-                hl = document.querySelector('.hl_wrapper').__vue__;                 
+                hl = document.querySelector('.hl_wrapper').__vue__;      
                 if (hl && hl.location && hl.location._data)
                 {
                 logo_url='';
                 locationCookie = '';
                     if (hl.location._data.logo_url) {
-                        logo_url = hl.location._data.logo_url;
-                        locationCookie = document.cookie = `locationUrl=${logo_url}`;
+                        logo_url = hl.location._data.logo_url;          
                     } else {
                         if (v.company && v.company.logoURL) logo_url = v.company.logoURL;
-                        else logo_url = getCookie("locationUrl")
                     }
                     if (logo_url.length>0 && document.querySelector('.hl_navbar--logo img').src!=logo_url)
                     {
+                        locationCookie = document.cookie = `${v.$route.params.location_id}=${logo_url}; path='/${v.$route.params.location_id}'` ;
                         document.querySelector('.hl_navbar--logo img').src=logo_url;
                     }
                 }
                 else{
-                    document.querySelector('.hl_navbar--logo img').src= getCookie("locationUrl");
+                    if(typeof v.$route.params.location_id != 'undefined') document.querySelector('.hl_navbar--logo img').src= getCookie(v.$route.params.location_id);
                 }
             }
         });
@@ -573,7 +581,7 @@ function getCookie(cname) {
       }
     }
     return "";
-  }
+}
 /****************************************/
 /****************************************/
 /****************************************/

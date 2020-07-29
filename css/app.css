@@ -217,25 +217,32 @@ body {
 }
 
 .settings-account{
-      border: 1px solid #798ce6;
+      border: 1px solid #6b6b6b;
       position: relative;
       text-align: center;
       cursor: pointer;
       display: inline;
       padding: 5px;
-      color: #4a63d6;
+      color: #6b6b6b;
       top: -15px;
       font-size: 14px;
 }
 
 .settings-account:hover{
-      background-color: #a5b5fe;
-      color: #4e4e4e;
+      color: #6b6b6b;
+      filter: drop-shadow(2px 4px 6px black);
       
 }
 
-.settings-account-selected{
-      background-color: #798ce6 !important;
+.settings-account-selected-user{
+      background-color: #64bd63 !important;
+      border: 1px solid #64bd63 !important;
+      color: #fff !important;
+}
+
+.settings-account-selected-admin{
+      background-color: #104b78 !important;
+      border: 1px solid #104b78 !important;
       color: #fff !important;
 }
 .location .header {
