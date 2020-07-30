@@ -35,37 +35,30 @@ ready(function() {
     v = document.getElementById('app').__vue__;
     addStyles(styles, function(){
         addScript(scripts).then(function(){
-            locationMenu();
+            
             dynamicLocationChange();
             checkInButton();
             shortcut();
             locationLogoInit();
+            locationMenu();
             userSettings();
             dashboardCustomizer();
-        });
 
-        v = document.getElementById('app').__vue__;
-
-        v.$router.afterEach((to, from) => {
-            // console.log('v router change');
-            logoClick(locationDefault);
-            console.log('router -afterEach');
-            locationMenu();
-            shortcut();
-            generateExpirationCookie();
-        });
+            v = document.getElementById('app').__vue__;
+            v.$router.afterEach((to, from) => {
+                // console.log('v router change');
+                logoClick(locationDefault);
+                console.log('router -afterEach');
+                locationMenu();
+                shortcut();
+            });
+        }); 
     });
+
 });
 
 
-function generateExpirationCookie(){
-    var dateNow = new Date();
-    var keyword = "expiration";
 
-    dateNow.setDate(dateNow.getDate() + 14);
-
-    if(getCookie(keyword).length <= 0) document.cookie = `${keyword}= ${dateNow.toLocaleDateString()}; expires=${dateNow.toUTCString()}`;
-}
 
 
 function dynamicLocationChange(){
@@ -160,7 +153,6 @@ function markLocation()
         root.classList.add('accounts');
      }
 }
-
 
 
 
@@ -541,30 +533,39 @@ async function locationLogoInit(){
     // but this code is tested do not change.
     var index = config.findIndex(val => val.id == 'all-location');
     if(typeof config[index].locationLogo != "undefined" && config[index].locationLogo){
-        $("body").on('DOMSubtreeModified', ".hl_wrapper", function () {
-            if (document.querySelectorAll('.hl_navbar--logo').length>0 && document.querySelectorAll('.hl_wrapper').length>0) {
-
-                hl = document.querySelector('.hl_wrapper').__vue__;      
-                if (hl && hl.location && hl.location._data)
-                {
-                logo_url='';
-                locationCookie = '';
-                    if (hl.location._data.logo_url) {
-                        logo_url = hl.location._data.logo_url;          
-                    } else {
-                        if (v.company && v.company.logoURL) logo_url = v.company.logoURL;
-                    }
-                    if (logo_url.length>0 && document.querySelector('.hl_navbar--logo img').src!=logo_url)
-                    {
-                        locationCookie = document.cookie = `${v.$route.params.location_id}=${logo_url}; path='/${v.$route.params.location_id}'` ;
-                        document.querySelector('.hl_navbar--logo img').src=logo_url;
-                    }
-                }
-                else{
-                    if(typeof v.$route.params.location_id != 'undefined') document.querySelector('.hl_navbar--logo img').src= getCookie(v.$route.params.location_id);
-                }
-            }
+        $("body").on('DOMSubtreeModified', ".hl_wrapper", function() {
+            updateLocationLogo()
         });
+         v.$router.afterEach((to, from) => {
+           console.log('mktk: wait_prop hl_wrapper');
+           wait_prop('.hl_wrapper',updateLocationLogo());
+        });
+    }
+}
+function updateLocationLogo()
+{
+    // console.log('mktk: updateLocationLogo');
+    if (document.querySelectorAll('.hl_navbar--logo').length>0 && document.querySelectorAll('.hl_wrapper').length>0) {
+
+        hl = document.querySelector('.hl_wrapper').__vue__;      
+        if (hl && hl.location && hl.location._data)
+        {
+        logo_url='';
+        locationCookie = '';
+            if (hl.location._data.logo_url) {
+                logo_url = hl.location._data.logo_url;          
+            } else {
+                if (v.company && v.company.logoURL) logo_url = v.company.logoURL;
+            }
+            if (logo_url.length>0 && document.querySelector('.hl_navbar--logo img').src!=logo_url)
+            {
+                locationCookie = document.cookie = `${v.$route.params.location_id}=${logo_url}; path='/${v.$route.params.location_id}'` ;
+                document.querySelector('.hl_navbar--logo img').src=logo_url;
+            }
+        }
+        else{
+            if(typeof v.$route.params.location_id != 'undefined') document.querySelector('.hl_navbar--logo img').src= getCookie(v.$route.params.location_id);
+        }
     }
 }
 

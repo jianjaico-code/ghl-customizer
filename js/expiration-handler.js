@@ -1,5 +1,8 @@
+
 ready(function () {
-    generateExpirationCookie();
+    setTimeout(() => {
+        generateExpirationCookie();
+    }, 500);
 })
 
 function ready(fn) {
@@ -12,12 +15,17 @@ function ready(fn) {
 
 
 function generateExpirationCookie(){
+  	var pageString = document.getElementById('__nuxt').innerHTML;
+  	var regExp = /%date:\+14%/
     var dateNow = new Date();
     var keyword = "expiration";
+ 
+  	const found = pageString.match(regExp);
+
 
     dateNow.setDate(dateNow.getDate() + 14);
       
-    if(getCookie(keyword).length <= 0) document.cookie = `${keyword}= ${dateNow.toLocaleDateString()}; expires=${dateNow.toUTCString()}`;
+    if(found) document.cookie = `${keyword}= ${dateNow.toLocaleDateString()}; expires=${dateNow.toUTCString()}`;
     if(new Date().toLocaleDateString == getCookie(keyword)) document.cookie = `${keyword}= ${dateNow.toLocaleDateString()}; expires=${dateNow.toUTCString()}`;
     injectExpirationElement(getCookie(keyword));
 }
@@ -43,7 +51,6 @@ function injectExpirationElement(text){
     var headingElem = document.createElement("div");
     var textVal = document.createTextNode(`This will expire on ${text}`);
     
-
     headingElem.appendChild(textVal);
     headingElem.style.position = "absolute";
     headingElem.style.zIndex = "999";
@@ -60,3 +67,4 @@ function injectExpirationElement(text){
 
     document.body.prepend(headingElem);
 }
+
