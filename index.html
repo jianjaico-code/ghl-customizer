@@ -87,7 +87,9 @@
 							<span class="fas fa-group"  @click="location.isTab=false; toggleOption(location.id, 'user-settings');"></span>
 						</div>
 						
-						<div class='header'>{{ location.name }}</div>
+						<div v-if="location.id == 'agency-dashboard'" class='header'>Agency Menu</div>
+						<div v-else-if="location.id == 'all-location'" class='header'>Account Location Menu</div>
+						<div v-else class='header'>{{ location.name }}</div>
 						<div class="subheader">#{{ location.id }}</div>
 	
 						<div v-if="location.menus.length==0" class="no-menus">
@@ -189,12 +191,18 @@
 						<table>
 							<tr>
 								<td class="label">ID</td>
-								<td><input type="text" v-model="locationId" placeholder="Location ID" required></td>
+								<td>
+									<input style="width: 80%;" type="text" v-model="locationId" placeholder="Location ID" required>
+									<i @mouseover="hover = true" @mouseleave="hover = false" style="cursor: pointer;" class="fa fa-question-circle" aria-hidden="true"></i>
+									<div v-if="hover" class="popover">
+										"https://app.gohighlevel.com/location/{{locationId}}/dashboard"
+									</div>
+								</td>
 							</tr>
 	
 							<tr>
 								<td class="label">Name</td>
-								<td><input type="text" v-model="locationName" placeholder="Name" required></td>
+								<td><input style="width: 80%;" type="text" v-model="locationName" placeholder="Name" required></td>
 							</tr>
 						</table>
 					</main>
@@ -293,7 +301,7 @@
 									<select v-model="menu.location" id="">
 										<option value="top">Top</option>
 										<option value="bottom">Bottom</option>
-										<option value="after">After a specific menu</option>
+										<option v-if="activeLocation.id != 'agency-dashboard'" value="after">After a specific menu</option>
 									</select>
 								</td>
 							</tr>
@@ -426,6 +434,7 @@
 					</header>
 					<main class="modal__content" id="editMenuId-content">
 						<table v-if="isEdit==true">
+							
 							<tr>
 								<td class="label"></td>
 								<td><span class="target">{{ edit.location.name }}</span><br><span>#{{ edit.location.id}}</span> <span v-if="typeof edit.isChild!='undefined'">#{{ edit.parent.name }}</span></td>
@@ -443,7 +452,7 @@
 								<td class="label">Name</td>
 								<td><input class="not-icp-glyps" type="text" v-model="edit.menu.name" placeholder="Option Name" required></td>
 							</tr>
-
+/
 							<tr v-if="edit.type == 'single'">
 								<td class="label">Link</td>
 								<td><input type="text" v-model="edit.menu.link" placeholder="Link" required></td>
@@ -451,7 +460,7 @@
 
 							<tr>
 								<td class="label"></td>
-								<td><input v-if="typeof edit.isChild=='undefined'" type="checkbox" @click="edit.menu.isIconPath=!edit.menu.isIconPath" :checked="edit.menu.isIconPath"> <span v-if="typeof edit.isChild=='undefined'"  class="checkbox">Use a custom image icon</span><br>
+								<td><input v-if="typeof edit.isChild=='undefined'" type="checkbox" @click="edit.menu.  lisIconPath=!edit.menu.isIconPath" :checked="edit.menu.isIconPath"> <span v-if="typeof edit.isChild=='undefined'"  class="checkbox">Use a custom image icon</span><br>
 									<input type="checkbox" @click="edit.menu.isIframe=!edit.menu.isIframe" :checked="edit.menu.isIframe"> <span  class="checkbox">Open inside dashboard (iframe)</span></td>
 							</tr>
 

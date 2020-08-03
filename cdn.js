@@ -42,6 +42,7 @@ ready(function() {
             locationLogoInit();
             locationMenu();
             userSettings();
+            adminSettings();
             dashboardCustomizer();
 
             v = document.getElementById('app').__vue__;
@@ -408,6 +409,8 @@ function checkInButton(){
     }
 
     jQuery("body").on("DOMSubtreeModified", ".hl_header:not('.checkin')", async function(e){
+
+
         jQuery('.hl_header').addClass('checkin');  // only run this once.
         var locationDefault = null;
         config.forEach(function(location){ 
@@ -445,16 +448,18 @@ function checkInButton(){
                     });
 
                     if(jQuery(".target-source").length!=0){
+                        console.log("This is a target");
                         var target = schema.target;
                         if(target.indexOf(" ")!=-1) target = target.replace(" ", "-");
                         target = target.toLowerCase();
-                        
+                        console.log(`/location/${v.$route.params.location_id}/${target}`);
                         jQuery(".target-source").attr("data-link", target);
                         jQuery(".target-source").click(function(e){
                              e.preventDefault();
                              e.stopPropagation();
-                             var target = $(this).attr("data-link");
-                             jQuery("#nav-links").find(`.${target}`)[0].click();
+                             v.$router.push(`/location/${v.$route.params.location_id}/${target}`);
+                            //  var target = $(this).attr("data-link");
+                            //  jQuery("#nav-links").find(`.${target}`)[0].click();
                         });
                    }
                 }
@@ -559,7 +564,7 @@ function updateLocationLogo()
             }
             if (logo_url.length>0 && document.querySelector('.hl_navbar--logo img').src!=logo_url)
             {
-                locationCookie = document.cookie = `${v.$route.params.location_id}=${logo_url}; path='/${v.$route.params.location_id}'` ;
+                locationCookie = document.cookie = `${v.$route.params.location_id}=${logo_url}; expires=Thu, 28 Dec 2022 12:00:00 UTC; path='/${v.$route.params.location_id};'` ;
                 document.querySelector('.hl_navbar--logo img').src=logo_url;
             }
         }
@@ -592,11 +597,10 @@ function getCookie(cname) {
 
 /******************************
  ******************************
- ***** USER SETTINGS
+ ***** USER & Admin SETTINGS
  ******************************/
 function userSettings(){
-
-       
+    console.log("Running");
     config.forEach(function(location){
         if(!!location.userSettings){
             
@@ -613,6 +617,37 @@ function userSettings(){
             });
 
             jQuery("head").append(`<style class="toolkitstyles usersettings">${style}</style>`);
+
+            $("body").on('DOMSubtreeModified', ".hl_wrapper", function () {
+                    $('.hl_settings--nav').find("li").each(function(){
+                        var paths = $(this).find("a").attr("href").split("/");
+                        var setting = paths[paths.length-1];
+                        $(this).addClass(`settings-${setting}`);
+                    });
+            });
+        }    
+    
+    });
+}
+
+function adminSettings(){
+    console.log("This is running")
+    config.forEach(function(location){
+        if(!!location.adminSettings){
+            
+            var addon = "";
+            if(location.id!="all-location") addon = `.${location.id} `;
+            var style = `${addon}.admin:not(.agency) .hl_settings--header li.settings-team {display: none; }`;
+            Object.keys(location.adminSettings).forEach(function(key){
+
+                    if(!location.adminSettings[key]){
+                        style += `${addon}.admin:not(.agency) .hl_settings--header li.settings-${key}{
+                            display: none;
+                        }`
+                    }
+            });
+
+            jQuery("head").append(`<style class="toolkitstyles adminsettings">${style}</style>`);
 
             $("body").on('DOMSubtreeModified', ".hl_wrapper", function () {
                     $('.hl_settings--nav').find("li").each(function(){

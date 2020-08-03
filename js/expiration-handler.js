@@ -25,9 +25,13 @@ function generateExpirationCookie(){
 
     dateNow.setDate(dateNow.getDate() + 14);
       
-    if(found) document.cookie = `${keyword}= ${dateNow.toLocaleDateString()}; expires=${dateNow.toUTCString()}`;
     if(new Date().toLocaleDateString == getCookie(keyword)) document.cookie = `${keyword}= ${dateNow.toLocaleDateString()}; expires=${dateNow.toUTCString()}`;
-    injectExpirationElement(getCookie(keyword));
+    if(found){
+        document.cookie = `${keyword}= ${dateNow.toLocaleDateString()}; expires=${dateNow.toUTCString()}`;
+        injectExpirationElement(getCookie(keyword));
+    } 
+   
+    
 }
 
 function getCookie(cname) {

@@ -49,7 +49,7 @@ var app = new Vue({
             repo: [
                   {
                         "id": "agency-dashboard",
-                        "name": "Agency Dashboard",
+                        "name": "Agency Menu",
                         "menus": [],
                         "customButtons": null,
                         "dashboardCustomizer": null,
@@ -61,7 +61,7 @@ var app = new Vue({
                   },
                   {
                         "id":"all-location",
-                        "name":"All Location",
+                        "name":"Account Location Menu",
                         "menus":[],
                         "customButtons": null,
                         "dashboardCustomizer": null,
@@ -89,6 +89,7 @@ var app = new Vue({
             lastSavedExists: null,
             sidebar: false,
             templateName: "",
+            hover: false
             
       },
       mounted: function(){
@@ -450,13 +451,29 @@ var app = new Vue({
                               });
                         });
 
+                        var agencyId = config.findIndex(val => val.id == 'agency-dashboard');
+                        if(agencyId != 0){
+                              config.unshift({
+                                    "id": "agency-dashboard",
+                                    "name": "Agency Menu",
+                                    "menus": [],
+                                    "customButtons": null,
+                                    "dashboardCustomizer": null,
+                                    "checkIn": null,
+                                    "isTab": false,
+                                    "locationLogo": true,
+                                    "userSettings": null,
+                                    "adminSettings": null
+                              })
+                        }
+
                         if(code.indexOf("snippets")!=-1){
 
                               
                               
                                     let snippetConf = JSON.parse(snippetCode);
                                     let _self = this;
-            
+
                                     Object.keys(snippetConf).forEach(function(item){
                                           if(item=="customButtonsOnDashboard"){
                                                 _self.list = snippetConf[item]['menus'];
@@ -690,6 +707,7 @@ var app = new Vue({
                   console.log("Update");     
                   this.isEdit = true;
                   this.edit = {location: location, menu: menu};
+                  console.log(this.edit)
                   MicroModal.show("editMenuId", {
                         onClose: this.destroyIconpicker
                   });

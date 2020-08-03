@@ -30,12 +30,42 @@
                         <div class="linkType">
                               <div>
                                     
-                                    <span class="option label" :class="{type: options.type=='default'}" @click="options.type='default'">Default Check In</span> 
-                                    <span class="option label" :class="{type: options.type=='target'}" @click="options.type='target'">Internal Menu Item</span> 
+                                    <span class="option label" :class="{type: options.type=='default'}" @click="options.type='default'; options.target = ''">Default Check In</span> 
+                                    <span class="option label" :class="{type: options.type=='target'}" @click="options.type='target'; options.target = 'dashboard'">Internal Menu Item</span> 
                                     <span class="option label" :class="{type: options.type=='link'}" @click="options.type='link'">Link</span> 
                               </div>
-                              <input v-if="options.type!='default'" type="text" v-model="options.target" :placeholder="(options.type=='target' ? 'Title of the Menu Item Exactly' : 'https://')">
+                              <!-- <input v-if="options.type!='default'" type="text" v-model="options.target" :placeholder="(options.type=='target' ? 'Title of the Menu Item Exactly' : 'https://')"> -->
                               <input v-if="options.type=='default'" type="text" v-model="options.target" placeholder="Title for the Check In Pop Up">
+                              <select class="target-selector"  v-if="options.type!='default'" type="text" v-model="options.target" :placeholder="(options.type=='target' ? 'Title of the Menu Item Exactly' : 'https://')">
+                                    <option value="dashboard" selected>Dashboard</option>
+                                    <option value="conversations">Conversations</option>
+                                    <option value="opportunities">Opportunities</option>
+                                    <option value="marketing/acquisition">Campaigns</option>
+                                    <option value="marketing/bulk">Bulk requests</option>
+                                    <option value="marketing/links">Trigger Links</option>
+                                    <option value="marketing/builder">Form Builder</option>
+                                    <option value="marketing/survey">Survey Builder</option>
+                                    <option value="marketing/text-templates">SMS & Email Templates</option>
+                                    <option value="marketing/email-builder">HTML Builder</option>
+                                    <option value="reporting/adwords/campaigns">Google Ads</option>
+                                    <option value="reporting/facebook/campaigns">Facebook Ads</option>
+                                    <option value="reporting/attribution">Attribution Report</option>
+                                    <option value="call_stats">Call Reporting</option>
+                                    <option value="scheduling/calendar">Calendar</option>
+                                    <option value="scheduling/appointments">Appointments</option>
+                                    <option value="reputation/reviews">Reviews</option>
+                                    <option value="reputation/review_requests">Review Requests</option>
+                                    <option value="customers/smart_list/All">Contacts / Smart lists</option>
+                                    <option value="customers/manual_actions">Manual Actions</option>
+                                    <option value="customers/imports">Contact requests</option>
+                                    <option value="funnels-websites/funnels">Funnels</option>
+                                    <option value="funnels-websites/websites">Websites</option>
+                                    <option value="membership/dashboard">Membership</option>
+                                    <option value="triggers">Triggers</option>
+                                    <option value="analysis">Online Listings</option>
+                                    <option value="settings/company">Settings</option>
+
+                              </select>
                               
                               <span style="font-size: 10pt; color: red; margin-bottom: 1rem;" v-if="options.type=='link'">{{ linkErrorMessage}}</span>
                               <div style="margin-bottom: 5px;" v-if="options.type=='link'"> 
@@ -223,6 +253,16 @@ module.exports = {
 
 
 <style scoped>
+.target-selector{    
+    padding: 8px;
+    border-radius: 3px;
+    font-family: "Inter", sans-serif;
+    border: 1px solid #aeb1b5;
+    color: #9197a0;
+    font-size: 10pt;
+    margin-top: 6px;
+}
+
 .switch-button-control{
       float: unset;
 }
